@@ -359,7 +359,7 @@ nft -f /etc/nftables.conf
 netfilter-persistent save
 ```
 
-## ゲートウェイ
+## ゲートウェイのセットアップ
 
 基本はbradminユーザーで実施
 
@@ -367,6 +367,13 @@ netfilter-persistent save
 
 ```sh
 mkdir /works
-git clone https://github.com/kukv/bright-room-infra.git /works/bright-room-infra
-chown -R bradmin:bradmin /works
+
+git clone https://github.com/kukv/br-cluster-gateway.git /works/br-cluster-gateway
+chown -R bradmin:bradmin /works/br-cluster-gateway
+```
+
+### コンテナを立ち上げ
+
+```sh
+docker compose up -d
 ```

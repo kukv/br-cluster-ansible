@@ -7,6 +7,12 @@ ansibleで自動化する際に参考にする
 
 基本はrootユーザーで実施
 
+### ネームサーバーの設定
+
+```sh
+echo "nameserver 8.8.8.8 8.8.4.4" > /etc/resolv.conf
+```
+
 ### cgroupの有効化
 
 ```sh
@@ -22,7 +28,7 @@ echo "gpu_mem=16" >> /boot/firmware/config.txt
 ### apt installを行うたびに、Daemons using outdated libraries Which services should be restarted? と表示されてしまうのでその対処
 
 ```sh
-echo "\$nrconf{restart} = 'a';" | sudo tee /etc/needrestart/conf.d/50local.conf
+echo "\$nrconf{restart} = 'a';" > /etc/needrestart/conf.d/50local.conf
 ```
 
 ### 再起動

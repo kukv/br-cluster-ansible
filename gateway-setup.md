@@ -64,6 +64,7 @@ apt install -y \
     gnupg \
     netfilter-persistent \
     iptables-persistent \
+    nftables \
     lsof \
     jq
 ```
@@ -133,12 +134,6 @@ sysctl -w net.ipv4.ip_forward=1 >> /etc/sysctl.conf
 ```
 
 ### nftablesの設定
-
-#### nftablesインストール
-
-```sh
-apt install -y nftables
-```
 
 #### グローバル設定
 

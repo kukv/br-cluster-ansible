@@ -7,10 +7,20 @@ ansibleで自動化する際に参考にする
 
 基本はrootユーザーで実施
 
+### ホスト名を追加
+
+```sh
+echo "127.0.1.1 $(hostname)" >> /etc/hosts
+```
+
 ### ネームサーバーの設定
 
 ```sh
-echo "nameserver 8.8.8.8 8.8.4.4" > /etc/resolv.conf
+mv /etc/resolv.conf /etc/resolv.conf.bk
+cat <<'EOF' > /etc/resolv.conf
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+EOF
 ```
 
 ### cgroupの有効化
@@ -25,10 +35,10 @@ sed -i -e "1 s/$/ cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1/g" /
 echo "gpu_mem=16" >> /boot/firmware/config.txt
 ```
 
-### apt installを行うたびに、Daemons using outdated libraries Which services should be restarted? と表示されてしまうのでその対処
+### apt upgradeを行うたびに、Pending kernel upgrade と表示されてしまうのでその対処
 
 ```sh
-echo "\$nrconf{restart} = 'a';" > /etc/needrestart/conf.d/50local.conf
+apt purge -y needrestart
 ```
 
 ### 再起動
@@ -66,6 +76,7 @@ apt install -y \
     iptables-persistent \
     nftables \
     lsof \
+    net-tools \
     jq
 ```
 
@@ -135,7 +146,13 @@ sysctl -w net.ipv4.ip_forward=1 >> /etc/sysctl.conf
 
 ### nftablesの設定
 
-#### グローバル設定
+#### ディレクトリを作成
+
+```sh
+mkdir /etc/nftables.d
+```
+
+#### ルールセット作成
 
 ```sh
 cat <<'EOF' > /etc/nftables.conf
@@ -371,6 +388,14 @@ mkdir /works
 
 git clone https://github.com/kukv/br-cluster-gateway.git /works/br-cluster-gateway
 chown -R bradmin:bradmin /works/br-cluster-gateway
+```
+
+### systemd-resolveの無効化
+
+```sh
+systemctl stop systemd-resolved
+systemctl disable systemd-resolved
+rm /etc/resolv.conf
 ```
 
 ### コンテナを立ち上げ

@@ -370,11 +370,24 @@ chain postrouting {
 EOF
 ```
 
+#### 設定ファイルに実行権限を与える
+
+```sh
+chmod u+x /etc/nftables.conf
+chmod u+x /etc/nftables.d/*
+```
+
 #### 設定を読み込み
 
 ```sh
 nft -f /etc/nftables.conf
 netfilter-persistent save
+```
+
+#### 自動起動を有効にする
+
+```sh
+systemctl enable nftables
 ```
 
 ## ゲートウェイのセットアップ

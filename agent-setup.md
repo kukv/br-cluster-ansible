@@ -1,6 +1,6 @@
-# Master setup
+# Agent setup
 
-Master(Primary)ノード構築時にセットアップした内容のメモ
+Agentノード構築時にセットアップした内容のメモ
 ansibleで自動化する際に参考にする
 
 ## システム設定
@@ -73,7 +73,7 @@ reboot
 apt update && apt -y upgrade
 ```
 
-## K3s-masterのセットアップ
+## K3s-agentのセットアップ
 
 基本はbradminユーザーで実施
 
@@ -106,45 +106,29 @@ EOF
 ```sh
 cat <<EOF > /etc/rancher/k3s/config.yaml
 token-file: /etc/rancher/k3s/cluster-token
-disable:
-  - local-storage
-  - servicelb
-  - traefik
-etcd-expose-metrics: true
-kube-controller-manager-arg:
-  - bind-address=0.0.0.0
-  - terminated-pod-gc-threshold=10
-kube-proxy-arg:
-  - metrics-bind-address=0.0.0.0
-kube-scheduler-arg:
-  - bind-address=0.0.0.0
+node-label:
+  - 'node_type=worker'
 kubelet-arg:
-  - config=/etc/rancher/k3s/kubelet.config
-node-taint:
-  - node-role.kubernetes.io/master=true:NoSchedule
-tls-san:
-  - 172.22.10.1
-  - 192.168.2.50
-write-kubeconfig-mode: 644
+  - 'config=/etc/rancher/k3s/kubelet.config'
+kube-proxy-arg:
+  - 'metrics-bind-address=0.0.0.0'
 EOF
 ```
 
 ### K3s-masterの起動
 
-Primaryの場合
-
 ```sh
-curl -sfL https://get.k3s.io | sh -s - server --cluster-init
+curl -sfL https://get.k3s.io | sh -s - agent --server https://172.22.10.1:6443
 ```
 
-Secondaryの場合
+### workerロールを付与
 
 ```sh
-curl -sfL https://get.k3s.io | sh -s - server --server https://172.22.10.60:6443
+kubectl label nodes <<node名>> kubernetes.io/role=worker
 ```
 
 ### K3s-masterのアンインストール
 
 ```sh
-/usr/local/bin/k3s-uninstall.sh
+/usr/local/bin/k3s-agent-uninstall.sh
 ```

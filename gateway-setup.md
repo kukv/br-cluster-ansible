@@ -41,6 +41,20 @@ echo "gpu_mem=16" >> /boot/firmware/config.txt
 apt purge -y needrestart
 ```
 
+### snapパッケーの削除
+
+```sh
+snap remove lxd && snap remove core22 && snap remove snapd
+apt purge -y snapd
+apt autoremove -y
+```
+
+### タイムゾーンの変更
+
+```sh
+timedatectl set-timezone Asia/Tokyo
+```
+
 ### 再起動
 
 ```sh
@@ -401,6 +415,10 @@ mkdir /works
 
 git clone https://github.com/kukv/br-cluster-gateway.git /works/br-cluster-gateway
 chown -R bradmin:bradmin /works/br-cluster-gateway
+
+# 後続のsystemd-resolveの無効化をする前にやらないとネットに繋がらなくなるため
+docker compose build
+docker compose pull
 ```
 
 ### systemd-resolveの無効化
@@ -408,11 +426,80 @@ chown -R bradmin:bradmin /works/br-cluster-gateway
 ```sh
 systemctl stop systemd-resolved
 systemctl disable systemd-resolved
-rm /etc/resolv.conf
 ```
 
 ### コンテナを立ち上げ
 
 ```sh
 docker compose up -d
+```
+
+## 外部ストレージの設定
+
+基本はrootユーザーで実施
+
+### ディスクの初期化
+
+```sh
+sgdisk /dev/sdb -g -e -n=0:0:0 -t 0:8e00
+mkfs.ext4 /dev/sdb1
+```
+
+### マウント
+
+```sh
+mkdir /storage
+mount -t ext4 /dev/sdb1 /storage
+```
+
+### 自動マウント設定
+
+```sh
+blkid
+cp /etc/fstab /etc/fstab.original
+echo -e "UUID=317c26a3-fc37-4a68-8ccd-7b242f007fa5\t/storage\text4\tdefaults,nofail\t1\t2" >> /etc/fstab
+```
+
+## iSCSI用の設定
+
+### Physical Volumeを作成
+
+```sh
+pvcreate /dev/sdb1
+pvdisplay
+```
+
+### iSCSI用Volumen Groupを作成
+
+```sh
+vgcreate vg_iscsi /dev/sdb1
+vgdisplay
+```
+
+### LUNに関連付けられたLVM論理ボリュームの作成
+
+```sh
+lvcreate -L 8G -n lv_iscsi_1 vg_iscsi
+lvcreate -L 8G -n lv_iscsi_2 vg_iscsi
+
+lvdisplay
+```
+
+## iSCSI-Targetの設定
+
+基本はrootユーザーで実施
+
+### パッケージのインストール
+
+```sh
+apt install -y targetcli-fb linux-modules-extra-6.5.0-1010-raspi
+```
+
+### iSCSI-Targetの実行
+
+```sh
+targetcli
+> set global auto_add_mapped_luns=false
+> cd iscsi/
+> create iqn.2024-03.work.bright-room:iscsi-server
 ```
